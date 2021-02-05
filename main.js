@@ -3,36 +3,39 @@ var fs = require('fs');
 var url = require('url'); // node.js가 갖고 있는 모듈중 url모듈을 사용할 것이다.
 var qs = require('querystring');
 
-
-
-function templateHtml(title,list,body, control){
-  return `
-  <!doctype html>
-  <html>
-  <head>
-    <title>WEB1 - ${title}</title>
-    <meta charset="utf-8">
-  </head>
-  <body>
-    <h1><a href="/">WEB</a></h1>
-    ${list}
-    ${control}
-    ${body}
-  </body>
-  </html>
-  `;
-}
-
-function templateList(filelist) {
-  var list =  '<ul>';
-  var i = 0;
-  while (filelist.length > i) {
-    list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-    i = i + 1;
+var template = {
+  html : function(title,list,body, control){
+    return `
+    <!doctype html>
+    <html>
+    <head>
+      <title>WEB1 - ${title}</title>
+      <meta charset="utf-8">
+    </head>
+    <body>
+      <h1><a href="/">WEB</a></h1>
+      ${list}
+      ${control}
+      ${body}
+    </body>
+    </html>
+    `;
+  },
+  list: function (filelist) {
+    var list =  '<ul>';
+    var i = 0;
+    while (filelist.length > i) {
+      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+      i = i + 1;
+    }
+    list = list + '</ul>';
+    return list;
   }
-  list = list + '</ul>';
-  return list;
 }
+
+
+
+
 
 
 
@@ -45,19 +48,20 @@ var app = http.createServer(function(request,response){
 
     if (pathname === '/') {
       fs.readdir('./data',function(error, filelist){
-        const list = templateList(filelist)
+        const list = template.list(filelist);
+
         if (queryData.id === undefined) {
           const title = 'Welcome';
           const description = 'Hello.Node.js';
-          const template = templateHtml(title,list,`<h2>${title}</h2>${description}`,
+          const html = template.html(title,list,`<h2>${title}</h2>${description}`,
           `<a href="/create">글 작성하기</a>
           `);
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
         } else {
           fs.readFile(`data/${queryData.id}`,'utf8',function(err,description){
             const title = queryData.id;
-            const template = templateHtml(title,list,`<h2>${title}</h2>${description}`,
+            const html = template.html(title,list,`<h2>${title}</h2>${description}`,
             `<a href="/create">작성하기</a>
             <a href="/update?id=${title}">수정하기</a>
             <form action="delete_process" method="post">
@@ -65,7 +69,7 @@ var app = http.createServer(function(request,response){
             <input type="submit" value="delete" />
             </form>`);
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
           }) ;
         }
 
@@ -96,8 +100,8 @@ var app = http.createServer(function(request,response){
     } else if(pathname === '/create') {
       fs.readdir('./data',function(error, filelist){
           var title = 'Web -- create';
-          var list = templateList(filelist)
-          var template = templateHtml(title,list,`
+          var list = template.list(filelist)
+          var template = template.html(title,list,`
           <form action="/create_process" method="post">
           <p><input type="text" name="title" placeholder="title"></p>
           <p>
@@ -109,7 +113,7 @@ var app = http.createServer(function(request,response){
           </form>
           `,``);
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
       })
     } else if(pathname === '/create_process') {
       var body = "";
@@ -133,8 +137,8 @@ var app = http.createServer(function(request,response){
       fs.readdir('./data',function(error, filelist){
             fs.readFile(`data/${queryData.id}`,'utf8',function(err,description){
               const title = queryData.id;
-              var list = templateList(filelist)
-              const template = templateHtml(title,list,
+              var list = template.list(filelist)
+              const html = template.html(title,list,
               `
               <form action="/update_process" method="post">
               <input type="hidden" name="id" value=${title}/>
@@ -150,7 +154,7 @@ var app = http.createServer(function(request,response){
               `<a href="/create">글 작성하기</a>
               <a href="/update?id=${title}">글 수정하기</a>`);
               response.writeHead(200);
-              response.end(template);
+              response.end(html);
             }) ;
       })
     } else if (pathname === '/update_process') {
