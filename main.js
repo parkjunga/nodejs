@@ -2,38 +2,8 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url'); // node.js가 갖고 있는 모듈중 url모듈을 사용할 것이다.
 var qs = require('querystring');
-
-var template = {
-  html : function(title,list,body, control){
-    return `
-    <!doctype html>
-    <html>
-    <head>
-      <title>WEB1 - ${title}</title>
-      <meta charset="utf-8">
-    </head>
-    <body>
-      <h1><a href="/">WEB</a></h1>
-      ${list}
-      ${control}
-      ${body}
-    </body>
-    </html>
-    `;
-  },
-  list: function (filelist) {
-    var list =  '<ul>';
-    var i = 0;
-    while (filelist.length > i) {
-      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-      i = i + 1;
-    }
-    list = list + '</ul>';
-    return list;
-  }
-}
-
-
+var template = require('./lib/template.js');
+var path = require('path');
 
 
 
@@ -59,7 +29,8 @@ var app = http.createServer(function(request,response){
           response.writeHead(200);
           response.end(html);
         } else {
-          fs.readFile(`data/${queryData.id}`,'utf8',function(err,description){
+          var filteredId = path.parse(queryData.id).base;
+          fs.readFile(`data/${filteredId}`,'utf8',function(err,description){
             const title = queryData.id;
             const html = template.html(title,list,`<h2>${title}</h2>${description}`,
             `<a href="/create">작성하기</a>
@@ -135,7 +106,8 @@ var app = http.createServer(function(request,response){
 
     } else if(pathname === '/update') {
       fs.readdir('./data',function(error, filelist){
-            fs.readFile(`data/${queryData.id}`,'utf8',function(err,description){
+        var filteredId = path.parse(queryData.id).base;
+            fs.readFile(`data/${filteredId}`,'utf8',function(err,description){
               const title = queryData.id;
               var list = template.list(filelist)
               const html = template.html(title,list,
@@ -185,7 +157,8 @@ var app = http.createServer(function(request,response){
       request.on('end', function(){
         var post = qs.parse(body);
         var id = post.id;
-        fs.unlink(`data/${id}`,function(error){
+        var filteredId = path.parse(id).base;
+        fs.unlink(`data/${filteredId}`,function(error){
           response.writeHead(302, {Location:`/`});
           response.end();
         })
