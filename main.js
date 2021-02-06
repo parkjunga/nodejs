@@ -40,14 +40,19 @@ var app = http.createServer(function(request,response){
             if (error){
               throw error;
             } 
-            db.query(`SELECT * FROM topic WHERE id =?`,[queryData.id], function(error2, topic){
+            db.query(`SELECT * FROM topic as t 
+                   LEFT JOIN author as a 
+                          ON t.author_id = a.id WHERE t.id =?`,[queryData.id], function(error2, topic){
               if (error2) {
                 throw error2;
               }
               const title = topic[0].title;
               const description = topic[0].description;
               var list = template.list(topics);
-              var html = template.html(title, list,`<h2>${title}</h2>${description}`,
+              var html = template.html(title, list,
+              `<h2>${title}</h2>
+              ${description} 
+              <p>by ${topic[0].name}</p>`,
               `<a href="/create">작성하기</a>
               <a href="/update?id=${queryData.id}">수정하기</a>
               <form action="delete_process" method="post">
