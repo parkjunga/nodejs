@@ -67,24 +67,31 @@ var app = http.createServer(function(request,response){
 
     } else if(pathname === '/create') {
       db.query(`SELECT * FROM topic`,function(error, topics){
-        const title = 'Create';
-        const list = template.list(topics);
-        var html = template.html(title,list,
-        `
-        <form action="/create_process" method="post">
-        <p><input type="text" name="title" placeholder="title"></p>
-        <p>
-        <textarea name="description" placeholder="description"></textarea>
-        </p>
-        <p>
-        <input type="submit">
-        </p>
-        </form>
-        `,
-        `<a href="/create">글 작성하기</a>
-        `);
-        response.writeHead(200);
-        response.end(html);
+        db.query(`SELECT * FROM author`, function(error2, authors){
+          console.log(authors); 
+
+          const title = 'Create';
+          const list = template.list(topics);
+          var html = template.html(title,list,
+          `
+          <form action="/create_process" method="post">
+            <p><input type="text" name="title" placeholder="title"></p>
+            <p>
+              <textarea name="description" placeholder="description"></textarea>
+            </p>
+            <p>
+            ${template.authorSelect(authors)}
+            </p>
+            <p>
+              <input type="submit">
+            </p>
+          </form>
+          `,
+          `<a href="/create">글 작성하기</a>
+          `);
+          response.writeHead(200);
+          response.end(html);
+        })
       })
 
     } else if(pathname === '/create_process') {
@@ -98,7 +105,7 @@ var app = http.createServer(function(request,response){
           db.query(`
           INSERT INTO topic (title, description, created, author_id) 
           VALUES(?,?,NOW(), ?)
-          `,[post.title, post.description, 1], function(error, result){
+          `,[post.title, post.description, post.author], function(error, result){
             if (error){
               throw error;
             }
@@ -116,26 +123,30 @@ var app = http.createServer(function(request,response){
           if (error2) {
             throw error2;
           }
-          const title = topic[0].title;
-          const description = topic[0].description;
-          var list = template.list(topics);
-          var html = template.html(title, list,
-          `<form action="/update_process" method="post">
-            <input type="hidden" name="id" value=${topic[0].id}>
-            <p><input type="text" name="title" placeholder="title" value=${title}></p>
-            <p>
-            <textarea name="description" placeholder="description">${description}</textarea>
-            </p>
-            <p>
-            <input type="submit">
-            </p>
-          </form> 
-          `,
-          `<a href="/create">글 작성하기</a>
-          <a href="/update?id=${topic[0].id}">글 수정하기</a>` );
-          response.writeHead(200);
-          response.end(html);
-
+          db.query(`SELECT * FROM author`, function (error3, authors) {
+            const title = topic[0].title;
+            const description = topic[0].description;
+            var list = template.list(topics);
+            var html = template.html(title, list,
+            `<form action="/update_process" method="post">
+              <input type="hidden" name="id" value=${topic[0].id}>
+              <p><input type="text" name="title" placeholder="title" value=${title}></p>
+              <p>
+              <textarea name="description" placeholder="description">${description}</textarea>
+              </p>
+              <p>
+              ${template.authorSelect(authors,topic[0].author_id)}
+              </p>
+              <p>
+              <input type="submit">
+              </p>
+            </form> 
+            `,
+            `<a href="/create">글 작성하기</a>
+            <a href="/update?id=${topic[0].id}">글 수정하기</a>` );
+            response.writeHead(200);
+            response.end(html);
+          })
         })
       })
     
