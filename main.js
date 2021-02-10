@@ -6,6 +6,12 @@ const compression = require('compression');
 const indexRouter = require('./routes/index');
 const topicRouter = require('./routes/topic');
 const authorRouter = require('./routes/author');
+
+/**
+ * 1. 미들웨어 사용시 require로 가져와서 사용한다.
+ * 2. 사용시 use라는 메서드를 활용한다.
+ */
+app.use(helmet()); // 보안을 위한 미들웨어 
 app.use(express.static('public')); //public 폴더안에서 image를 찾는다는의미, 정적인파일을 서비스하고자하는 폴더를 직접 지정해주면 url을 통해 접근이 가능하다.
 // 사용자가 요청할떄마다 아래코드로 인해서 만들어진 미들웨어가 실행되는데 내부적으로 사용자가 전송한 포스트데이터를 
 app.use(bodyParser.urlencoded({ extended: false}));
