@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express(); //express는 함수  
-const topic = require('./lib/topic');
 const bodyParser = require('body-parser');
 const compression = require('compression');
 const indexRouter = require('./routes/index');
