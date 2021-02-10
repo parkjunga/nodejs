@@ -1,38 +1,30 @@
 const express = require('express');
-const url = require('url'); // node.js가 갖고 있는 모듈중 url모듈을 사용할 것이다.
-
 const app = express(); //express는 함수  
-
-const qs = require('querystring');
-
 const topic = require('./lib/topic');
-const { request } = require('http');
+const bodyParser = require('body-parser');
+const compression = require('compression');
+const indexRouter = require('./routes/index');
+const topicRouter = require('./routes/topic');
+const authorRouter = require('./routes/author');
+app.use(express.static('public')); //public 폴더안에서 image를 찾는다는의미, 정적인파일을 서비스하고자하는 폴더를 직접 지정해주면 url을 통해 접근이 가능하다.
+// 사용자가 요청할떄마다 아래코드로 인해서 만들어진 미들웨어가 실행되는데 내부적으로 사용자가 전송한 포스트데이터를 
+app.use(bodyParser.urlencoded({ extended: false}));
+app.use(compression()); // 미들웨어는 함수이다. 파라마타 1. request 2. response 3. next는 호출되어야될 미들웨어 변수 약속
 
-// routing
-app.get('/', function (request,response) {
-  const _url = request.url;
-  const queryData = url.parse(_url, true).query;
-  const pathname = url.parse(_url, true).pathname;
-    topic.home(request,response);
-    
-});
 
-app.get('/page/:pageId', function(request,response) {
-  topic.page(request,response);
-});
-
-app.get('/create', (request,response) => topic.create(request,response));
-
-app.post('/create', (request,response) => topic.create_process(request,response));
-
-app.get('/update/:pageId', (request,response) => topic.update(request,response));
-
-app.post('/update',(request,response) => topic.update_process(request,response));
-
-app.post('/delete_process', (request,response) => topic.delete_process(request,response));
+app.use('/', indexRouter);
+app.use('/topic',topicRouter);
+app.use('/author', authorRouter);
 /*app.get('/', function(req,res){
   return res.send('Hello world')
 })*/
+
+// 미들웨어는 순차적으로 진행되기때문에 가장 마지막에 선언함.
+app.use(function(req,res,next) {
+  res.status(404).send('Sorry can not page');
+})
+
+
 app.listen(3000, () => console.log('Example app listening on port 3000!'));
 
 // var http = require('http');
